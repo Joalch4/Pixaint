@@ -1,2 +1,2 @@
 # Pixaint
-Paint con Pixel Art
+Este proyecto consiste en crear un Pixel Art inspirado en la aplicacion de Paint
