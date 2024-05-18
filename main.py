@@ -1,6 +1,6 @@
 import pygame
 import sys
-#hola
+
 pygame.init()
 
 CELL_SIZE = 20
