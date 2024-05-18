@@ -14,10 +14,11 @@ WIDTH = 550
 HEIGHT = 530
 GRID_X_OFFSET = (WIDTH - GRID_WIDTH) // 2
 GRID_Y_OFFSET = (HEIGHT - GRID_HEIGHT) // 2
-BUTTON_X_OFFSET = GRID_X_OFFSET + GRID_WIDTH + 5
+BUTTON_X_OFFSET = GRID_X_OFFSET + GRID_WIDTH + 5 
 BUTTON_Y_OFFSET = GRID_Y_OFFSET + (GRID_HEIGHT - (BUTTON_COLS * BUTTON_SIZE + (BUTTON_COLS - 1) * 5)) // 2
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Pixaint')
+
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -38,47 +39,42 @@ BUTTON_COLORS = [
 
 grid = [[0] * COLS for _ in range(ROWS)]
 
+buttons = [
+    {"rect": pygame.Rect(10, 50, 50, 50), "text": "Seleccion Borrador"},
+    {"rect": pygame.Rect(10, 110, 50, 50), "text": "Selección Rectangulo"},
+    {"rect": pygame.Rect(10, 170, 50, 50), "text": "Seleccion Circulo"},
+    {"rect": pygame.Rect(10, 230, 50, 50), "text": "Seleccion Guardar"},
+    {"rect": pygame.Rect(10, 290, 50, 50), "text": "Seleccion Cargar"},
+    {"rect": pygame.Rect(10, 350, 50, 50), "text": "Seleccion Matriz"},
+    {"rect": pygame.Rect(10, 410, 50, 50), "text": "Seleccion Matriz Numerica"},
+    {"rect": pygame.Rect(10, 470, 50, 50), "text": "Selección Limpiar"},
+    {"rect": pygame.Rect(70, 470, 50, 50), "text": "Seleccion Zoom In"},
+    {"rect": pygame.Rect(130, 470, 50, 50), "text": "Seleccion Zoom Out"},
+    {"rect": pygame.Rect(190, 470, 50, 50), "text": "Seleccion Rotar Derecha"},
+    {"rect": pygame.Rect(250, 470, 50, 50), "text": "Seleccion Rotar Izquierda"},
+    {"rect": pygame.Rect(310, 470, 50, 50), "text": "Selección Reflejo Horizontal"},
+    {"rect": pygame.Rect(370, 470, 50, 50), "text": "Seleccion Reflejo Vertical"},
+    {"rect": pygame.Rect(430, 470, 50, 50), "text": "Seleccion Contraste"},
+    {"rect": pygame.Rect(490, 470, 50, 50), "text": "Seleccion Negativo"},
+    {"rect": pygame.Rect(70, 6, 50, 50), "text": "Seleccion ASCII"},
+]
+
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button==1:
-            if pygame.Rect(10, 50, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Seleccion Borrador")
-            if pygame.Rect(10, 110, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Selección Rectangulo")
-            if pygame.Rect(10, 170, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Seleccion Circulo")
-            if pygame.Rect(10, 230, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Seleccion Guardar ")
-            if pygame.Rect(10, 290, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Seleccion Cargar")
-            if pygame.Rect(10, 350, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Seleccion Matriz")
-            if pygame.Rect(10, 410, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Seleccion Matriz Numerica")
-            if pygame.Rect(10, 470, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Selección Limpiar")
-            if pygame.Rect(70, 470, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Seleccion Zoom In")
-            if pygame.Rect(130, 470, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Seleccion Zoom Out")
-            if pygame.Rect(190, 470, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Seleccion Rotar Derecha")
-            if pygame.Rect(250, 470, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Seleccion Rotar Izquierda")
-            if pygame.Rect(310, 470, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Selección Reflejo Horizontal")
-            if pygame.Rect(370, 470, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Seleccion Reflejo Vertical")
-            if pygame.Rect(430, 470, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Seleccion Contraste")
-            if pygame.Rect(490, 470, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Seleccion Negativo")
-            if pygame.Rect(70, 6, 50, 50).collidepoint(pygame.mouse.get_pos()):
-                print("Seleccion ASCII")
-
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            mouse_pos = pygame.mouse.get_pos()
+            for button in buttons:
+                if button["rect"].collidepoint(mouse_pos):
+                    print(button["text"])
+            else: 
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                for i in range(BUTTON_COLS):
+                    button_rect = pygame.Rect(BUTTON_X_OFFSET + 5, BUTTON_Y_OFFSET + i * (BUTTON_SIZE + 5), BUTTON_SIZE, BUTTON_SIZE)
+                    if button_rect.collidepoint(mouse_x, mouse_y):
+                        print("Clic en el botón", i)
 
     screen.fill(WHITE)
     screen.blit(pygame.image.load("boton_borrador.png"), (10,50))
@@ -105,9 +101,10 @@ while running:
             rect = pygame.Rect(GRID_X_OFFSET + col * CELL_SIZE, GRID_Y_OFFSET + row * CELL_SIZE, CELL_SIZE, CELL_SIZE)
             pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
-    for i in range(BUTTON_COLS):
+    for i in range(len(BUTTON_COLORS)):
         button_rect = pygame.Rect(BUTTON_X_OFFSET + 5, BUTTON_Y_OFFSET + i * (BUTTON_SIZE + 5), BUTTON_SIZE, BUTTON_SIZE)
         pygame.draw.rect(screen, BUTTON_COLORS[i], button_rect)
+
 
     pygame.display.flip()
 
