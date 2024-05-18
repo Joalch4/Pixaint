@@ -1,42 +1,40 @@
 import pygame
 import sys
 
-# Inicializar Pygame
 pygame.init()
 
-# Configuración de la pantalla
-CELL_SIZE = 12
-COLS = 26
-ROWS = 17
-WIDTH = COLS * CELL_SIZE
-HEIGHT = ROWS * CELL_SIZE
+CELL_SIZE = 20
+ROWS = 20
+COLS = 20
+GRID_WIDTH = COLS * CELL_SIZE
+GRID_HEIGHT = ROWS * CELL_SIZE
+WIDTH = 500
+HEIGHT = 500
+GRID_X_OFFSET = (WIDTH - GRID_WIDTH) // 2
+GRID_Y_OFFSET = (HEIGHT - GRID_HEIGHT) // 2
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('Cuadrícula de matrices 12x12')
+pygame.display.set_caption('Pixaint')
 
-# Colores
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-GRAY = (200, 200, 200)
+BORDER_COLOR = BLACK
 
-# Bucle principal
+grid = [[0] * COLS for _ in range(ROWS)]
+
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    # Dibujar el fondo
     screen.fill(WHITE)
 
-    # Dibujar la cuadrícula
     for row in range(ROWS):
         for col in range(COLS):
-            rect = pygame.Rect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-            pygame.draw.rect(screen, GRAY, rect, 1)
+            rect = pygame.Rect(GRID_X_OFFSET + col * CELL_SIZE, GRID_Y_OFFSET + row * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+            pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
-    # Actualizar la pantalla
     pygame.display.flip()
 
-# Salir de Pygame
 pygame.quit()
 sys.exit()
