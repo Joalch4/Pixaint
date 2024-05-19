@@ -8,7 +8,7 @@ ROWS = 20
 COLS = 20
 BUTTON_SIZE = 50
 BUTTON_PADDING = 5
-NUM_BUTTONS = 28  # Número total de botones
+NUM_BUTTONS = 28
 
 GRID_WIDTH = COLS * CELL_SIZE
 GRID_HEIGHT = ROWS * CELL_SIZE
@@ -37,30 +37,24 @@ BUTTON_COLORS = [
     (0, 128, 0),    # Verde oscuro
 ]
 
-# Cargar imágenes de botones
 button_images = []
 for i in range(1, 18):
-    image_path = f"imagenes_pixaint/boton_{i}.png"  # Ajusta los nombres de los archivos de imagen según tus necesidades
+    image_path = f"imagenes_pixaint/boton_{i}.png"
     button_images.append(pygame.image.load(image_path))
 
 grid = [[0] * COLS for _ in range(ROWS)]
 
-# Definir los botones alrededor de la cuadrícula
 buttons = []
 
-# Botones en el lado izquierdo
 for i in range(NUM_BUTTONS // 4):
     buttons.append({"rect": pygame.Rect(GRID_X_OFFSET - BUTTON_SIZE - 10, GRID_Y_OFFSET + i * (BUTTON_SIZE + BUTTON_PADDING), BUTTON_SIZE, BUTTON_SIZE), "text": f"Botón {i+1}"})
 
-# Botones en el lado derecho
 for i in range(NUM_BUTTONS // 4):
     buttons.append({"rect": pygame.Rect(GRID_X_OFFSET + GRID_WIDTH + 10, GRID_Y_OFFSET + i * (BUTTON_SIZE + BUTTON_PADDING), BUTTON_SIZE, BUTTON_SIZE), "text": f"Botón {i+1+NUM_BUTTONS//4}"})
 
-# Botones en la parte superior
 for i in range(NUM_BUTTONS // 4):
     buttons.append({"rect": pygame.Rect(GRID_X_OFFSET + i * (BUTTON_SIZE + BUTTON_PADDING), GRID_Y_OFFSET - BUTTON_SIZE - 10, BUTTON_SIZE, BUTTON_SIZE), "text": f"Botón {i+1+NUM_BUTTONS//2}"})
 
-# Botones en la parte inferior
 for i in range(NUM_BUTTONS // 4):
     buttons.append({"rect": pygame.Rect(GRID_X_OFFSET + i * (BUTTON_SIZE + BUTTON_PADDING), GRID_Y_OFFSET + GRID_HEIGHT + 10, BUTTON_SIZE, BUTTON_SIZE), "text": f"Botón {i+1+3*(NUM_BUTTONS//4)}"})
 
