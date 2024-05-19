@@ -6,19 +6,19 @@ pygame.init()
 CELL_SIZE = 20
 ROWS = 20
 COLS = 20
-BUTTON_COLS = 10
+BUTTON_SIZE = 50
+BUTTON_PADDING = 5
+NUM_BUTTONS = 28  # Número total de botones
+
 GRID_WIDTH = COLS * CELL_SIZE
 GRID_HEIGHT = ROWS * CELL_SIZE
-BUTTON_SIZE = 30
-WIDTH = 550
-HEIGHT = 530
+WIDTH = GRID_WIDTH + 2 * (BUTTON_SIZE + 10)
+HEIGHT = GRID_HEIGHT + 2 * (BUTTON_SIZE + 10)
 GRID_X_OFFSET = (WIDTH - GRID_WIDTH) // 2
 GRID_Y_OFFSET = (HEIGHT - GRID_HEIGHT) // 2
-BUTTON_X_OFFSET = GRID_X_OFFSET + GRID_WIDTH + 5 
-BUTTON_Y_OFFSET = GRID_Y_OFFSET + (GRID_HEIGHT - (BUTTON_COLS * BUTTON_SIZE + (BUTTON_COLS - 1) * 5)) // 2
+
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Pixaint')
-
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -37,27 +37,32 @@ BUTTON_COLORS = [
     (0, 128, 0),    # Verde oscuro
 ]
 
+# Cargar imágenes de botones
+button_images = []
+for i in range(1, 18):
+    image_path = f"boton_{i}.png"  # Ajusta los nombres de los archivos de imagen según tus necesidades
+    button_images.append(pygame.image.load(image_path))
+
 grid = [[0] * COLS for _ in range(ROWS)]
 
-buttons = [
-    {"rect": pygame.Rect(10, 50, 50, 50), "text": "Seleccion Borrador"},
-    {"rect": pygame.Rect(10, 110, 50, 50), "text": "Selección Rectangulo"},
-    {"rect": pygame.Rect(10, 170, 50, 50), "text": "Seleccion Circulo"},
-    {"rect": pygame.Rect(10, 230, 50, 50), "text": "Seleccion Guardar"},
-    {"rect": pygame.Rect(10, 290, 50, 50), "text": "Seleccion Cargar"},
-    {"rect": pygame.Rect(10, 350, 50, 50), "text": "Seleccion Matriz"},
-    {"rect": pygame.Rect(10, 410, 50, 50), "text": "Seleccion Matriz Numerica"},
-    {"rect": pygame.Rect(10, 470, 50, 50), "text": "Selección Limpiar"},
-    {"rect": pygame.Rect(70, 470, 50, 50), "text": "Seleccion Zoom In"},
-    {"rect": pygame.Rect(130, 470, 50, 50), "text": "Seleccion Zoom Out"},
-    {"rect": pygame.Rect(190, 470, 50, 50), "text": "Seleccion Rotar Derecha"},
-    {"rect": pygame.Rect(250, 470, 50, 50), "text": "Seleccion Rotar Izquierda"},
-    {"rect": pygame.Rect(310, 470, 50, 50), "text": "Selección Reflejo Horizontal"},
-    {"rect": pygame.Rect(370, 470, 50, 50), "text": "Seleccion Reflejo Vertical"},
-    {"rect": pygame.Rect(430, 470, 50, 50), "text": "Seleccion Contraste"},
-    {"rect": pygame.Rect(490, 470, 50, 50), "text": "Seleccion Negativo"},
-    {"rect": pygame.Rect(70, 6, 50, 50), "text": "Seleccion ASCII"},
-]
+# Definir los botones alrededor de la cuadrícula
+buttons = []
+
+# Botones en el lado izquierdo
+for i in range(NUM_BUTTONS // 4):
+    buttons.append({"rect": pygame.Rect(GRID_X_OFFSET - BUTTON_SIZE - 10, GRID_Y_OFFSET + i * (BUTTON_SIZE + BUTTON_PADDING), BUTTON_SIZE, BUTTON_SIZE), "text": f"Botón {i+1}"})
+
+# Botones en el lado derecho
+for i in range(NUM_BUTTONS // 4):
+    buttons.append({"rect": pygame.Rect(GRID_X_OFFSET + GRID_WIDTH + 10, GRID_Y_OFFSET + i * (BUTTON_SIZE + BUTTON_PADDING), BUTTON_SIZE, BUTTON_SIZE), "text": f"Botón {i+1+NUM_BUTTONS//4}"})
+
+# Botones en la parte superior
+for i in range(NUM_BUTTONS // 4):
+    buttons.append({"rect": pygame.Rect(GRID_X_OFFSET + i * (BUTTON_SIZE + BUTTON_PADDING), GRID_Y_OFFSET - BUTTON_SIZE - 10, BUTTON_SIZE, BUTTON_SIZE), "text": f"Botón {i+1+NUM_BUTTONS//2}"})
+
+# Botones en la parte inferior
+for i in range(NUM_BUTTONS // 4):
+    buttons.append({"rect": pygame.Rect(GRID_X_OFFSET + i * (BUTTON_SIZE + BUTTON_PADDING), GRID_Y_OFFSET + GRID_HEIGHT + 10, BUTTON_SIZE, BUTTON_SIZE), "text": f"Botón {i+1+3*(NUM_BUTTONS//4)}"})
 
 running = True
 while running:
@@ -69,42 +74,18 @@ while running:
             for button in buttons:
                 if button["rect"].collidepoint(mouse_pos):
                     print(button["text"])
-            else: 
-                mouse_x, mouse_y = pygame.mouse.get_pos()
-                for i in range(BUTTON_COLS):
-                    button_rect = pygame.Rect(BUTTON_X_OFFSET + 5, BUTTON_Y_OFFSET + i * (BUTTON_SIZE + 5), BUTTON_SIZE, BUTTON_SIZE)
-                    if button_rect.collidepoint(mouse_x, mouse_y):
-                        print("Clic en el botón", i)
 
     screen.fill(WHITE)
-    screen.blit(pygame.image.load("boton_borrador.png"), (10,50))
-    screen.blit(pygame.image.load("boton_rect.png"), (10, 110))
-    screen.blit(pygame.image.load("boton_circulo.png"), (10, 170))
-    screen.blit(pygame.image.load("boton_guardar.png"), (10, 230))
-    screen.blit(pygame.image.load("boton_cargar.png"), (10, 290))
-    screen.blit(pygame.image.load("boton_matriz.png"), (10, 350))
-    screen.blit(pygame.image.load("boton_matriznum.png"), (10, 410))
-    screen.blit(pygame.image.load("boton_limpiar.png"), (10, 470))
-    screen.blit(pygame.image.load("boton_zoomin.png"), (70, 470))
-    screen.blit(pygame.image.load("boton_zoomout.png"), (130, 470))
-    screen.blit(pygame.image.load("boton_rotard.png"), (190, 470))
-    screen.blit(pygame.image.load("boton_rotari.png"), (250, 470))
-    screen.blit(pygame.image.load("boton_reflejhor.png"), (310, 470))
-    screen.blit(pygame.image.load("boton_reflejvert.png"), (370, 470))
-    screen.blit(pygame.image.load("boton_contraste.png"), (430, 470))
-    screen.blit(pygame.image.load("boton_negativo.png"), (490, 470))
-    screen.blit(pygame.image.load("boton_ascii.png"), (70, 6))
-    
+    for idx, button in enumerate(buttons):
+        if idx < 17:
+            screen.blit(button_images[idx], button["rect"].topleft)
+        else:
+            pygame.draw.rect(screen, BUTTON_COLORS[idx % len(BUTTON_COLORS)], button["rect"], border_radius=5)
 
     for row in range(ROWS):
         for col in range(COLS):
             rect = pygame.Rect(GRID_X_OFFSET + col * CELL_SIZE, GRID_Y_OFFSET + row * CELL_SIZE, CELL_SIZE, CELL_SIZE)
             pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
-
-    for i in range(len(BUTTON_COLORS)):
-        button_rect = pygame.Rect(BUTTON_X_OFFSET + 5, BUTTON_Y_OFFSET + i * (BUTTON_SIZE + 5), BUTTON_SIZE, BUTTON_SIZE)
-        pygame.draw.rect(screen, BUTTON_COLORS[i], button_rect)
-
 
     pygame.display.flip()
 
