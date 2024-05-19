@@ -59,7 +59,7 @@ for i in range(NUM_BUTTONS // 4):
 for i in range(NUM_BUTTONS // 4):
     buttons.append({"rect": pygame.Rect(GRID_X_OFFSET + i * (BUTTON_SIZE + BUTTON_PADDING), GRID_Y_OFFSET + GRID_HEIGHT + 10, BUTTON_SIZE, BUTTON_SIZE), "text": f"Botón {i+1+3*(NUM_BUTTONS//4)}"})
 
-selected_color = BLACK
+selected_color = None
 
 running = True
 while running:
