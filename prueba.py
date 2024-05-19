@@ -40,7 +40,7 @@ BUTTON_COLORS = [
 # Cargar imágenes de botones
 button_images = []
 for i in range(1, 18):
-    image_path = f"boton_{i}.png"  # Ajusta los nombres de los archivos de imagen según tus necesidades
+    image_path = f"imagenes_pixaint/boton_{i}.png"  # Ajusta los nombres de los archivos de imagen según tus necesidades
     button_images.append(pygame.image.load(image_path))
 
 grid = [[0] * COLS for _ in range(ROWS)]
