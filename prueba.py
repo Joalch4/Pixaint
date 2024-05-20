@@ -125,10 +125,10 @@ def toggle_symbols():
 
 
 def clear_grid():
+    #Limpia la cuadrícula
     global showing_numbers, showing_symbols
     showing_numbers = False
     showing_symbols = False
-    #Limpia la cuadrícula
     for row in range(ROWS):
         for col in range(COLS):
             grid[row][col] = WHITE
