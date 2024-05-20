@@ -42,6 +42,10 @@ BUTTON_COLORS = [
     (255, 0, 255),  # Blanco (Botón 28)
 ]
 
+BUTTON_SYMBOLS = [
+    ".", ":", "-", "=", "¡", "&", "$", "%", "@", "*", "/"
+]
+
 button_images = []
 for i in range(1, 18):
     image_path = f"imagenes_pixaint/boton_{i}.png"
@@ -49,7 +53,7 @@ for i in range(1, 18):
 
 # Creación de la cuadrícula y lista de botones
 grid = [[WHITE] * COLS for _ in range(ROWS)]
-original_grid = [[WHITE] * COLS for _ in range(ROWS)]  
+original_grid = [[WHITE] * COLS for _ in range(ROWS)]
 
 buttons = []
 
@@ -67,7 +71,7 @@ for i in range(NUM_BUTTONS // 4):
     buttons.append({"rect": pygame.Rect(GRID_X_OFFSET + i * (BUTTON_SIZE + BUTTON_PADDING), GRID_Y_OFFSET + GRID_HEIGHT + 10, BUTTON_SIZE, BUTTON_SIZE), "text": f"Botón {i+1+3*(NUM_BUTTONS//4)}"})
 
 selected_color = WHITE
-showing_numbers = False  
+showing_numbers = False
 
 def color_to_number(color):
     # Función para convertir un color en su número correspondiente
@@ -90,7 +94,47 @@ def toggle_grid():
             for col in range(COLS):
                 original_grid[row][col] = grid[row][col]  
                 grid[row][col] = color_to_number(grid[row][col])  
-    showing_numbers = not showing_numbers  
+    showing_numbers = not showing_numbers
+
+
+
+showing_symbols = False
+
+def color_to_symbol(color):
+    # Convertir colores a simbolos
+    if color == WHITE:
+        return ""
+    for idx, col in enumerate(BUTTON_COLORS):
+        if color == col:
+            return BUTTON_SYMBOLS[idx % len(BUTTON_SYMBOLS)]
+    return "?"
+
+def toggle_symbols():
+    #Alternar entre símbolos y colores
+    global showing_symbols
+    if showing_symbols:
+        for row in range(ROWS):
+            for col in range(COLS):
+                grid[row][col] = original_grid[row][col]
+    else:
+        for row in range(ROWS):
+            for col in range(COLS):
+                original_grid[row][col] = grid[row][col]
+                grid[row][col] = color_to_symbol(grid[row][col])
+    showing_symbols = not showing_symbols
+
+
+def clear_grid():
+    global showing_numbers, showing_symbols
+    showing_numbers = False
+    showing_symbols = False
+    #Limpia la cuadrícula
+    for row in range(ROWS):
+        for col in range(COLS):
+            grid[row][col] = WHITE
+
+
+
 
 # Bucle principal del juego
 running = True
@@ -111,6 +155,14 @@ while running:
                     if button["rect"].collidepoint(mouse_pos):
                         if idx == 13:  
                             toggle_grid()
+                            button_clicked = True
+                            break
+                        elif idx == 16:
+                            toggle_symbols()
+                            button_clicked = True
+                            break
+                        elif idx == 15:
+                            clear_grid()
                             button_clicked = True
                             break
                 if not button_clicked:
@@ -134,6 +186,10 @@ while running:
             if showing_numbers and isinstance(color, int):
                 # Si estamos mostrando números, se muestra el número en lugar del color
                 text_surface = pygame.font.SysFont(None, 24).render(str(color), True, BLACK)
+                screen.blit(text_surface, rect.topleft)
+            elif showing_symbols and isinstance(color, str):
+                # Si estamos mostrando símbolos, se muestra el símbolo en lugar del color
+                text_surface = pygame.font.SysFont(None, 24).render(color, True, BLACK)
                 screen.blit(text_surface, rect.topleft)
             else:
                 # Si estamos mostrando colores, se dibuja el rectángulo del color
