@@ -122,7 +122,8 @@ class Pixaint:
                 rect = pygame.Rect(col * self.CELL_SIZE, row * self.CELL_SIZE, self.CELL_SIZE, self.CELL_SIZE)
                 pygame.draw.rect(surface, self.grid[row][col], rect)
                 pygame.draw.rect(surface, self.BORDER_COLOR, rect, 1)
-        
+        if not os.path.exists('Pixaint-main/imagenes_guardadas'):
+            os.makedirs('Pixaint-main/imagenes_guardadas')
         # Generar el nombre del archivo basado en la fecha y hora actuales
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = os.path.join('Pixaint-main/imagenes_guardadas', f'pixaint_image_{timestamp}.png')
