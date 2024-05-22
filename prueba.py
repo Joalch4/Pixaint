@@ -1,3 +1,4 @@
+
 import pygame
 import sys
 import os
@@ -121,6 +122,14 @@ class Pixaint:
                         self.rotate_left()
                         button_clicked = True
                         break
+                    elif idx == 7:
+                        self.reflect_vert()
+                        button_clicked = True
+                        break
+                    elif idx == 11:
+                        self.reflect_horiz()
+                        button_clicked = True
+                        break
             if not button_clicked:
                 grid_x = (mouse_pos[0] - self.GRID_X_OFFSET) // self.CELL_SIZE
                 grid_y = (mouse_pos[1] - self.GRID_Y_OFFSET) // self.CELL_SIZE
@@ -197,17 +206,22 @@ class Pixaint:
         return -1
 
     def toggle_grid(self):
-        # Función para alternar entre mostrar colores y números en la cuadrícula
-        self.showing_numbers = not self.showing_numbers
-        if self.showing_numbers:
-            # Almacena la cuadrícula original antes de convertir los colores en números
-            self.original_grid = [row[:] for row in self.grid]
+        # Alterna entre colores, numeros o simbolos
+        if self.showing_symbols:
             for row in range(self.ROWS):
                 for col in range(self.COLS):
-                    self.grid[row][col] = self.color_to_number(self.grid[row][col])
+                    self.grid[row][col] = self.symbol_to_number(self.grid[row][col])
+            self.showing_symbols = False
+            self.showing_numbers = True
         else:
-            # Restaura la cuadrícula original cuando se muestra de nuevo en colores
-            self.grid = [row[:] for row in self.original_grid]
+            self.showing_numbers = not self.showing_numbers
+            if self.showing_numbers:
+                self.original_grid = [row[:] for row in self.grid]
+                for row in range(self.ROWS):
+                    for col in range(self.COLS):
+                        self.grid[row][col] = self.color_to_number(self.grid[row][col])
+            else:
+                self.grid = [row[:] for row in self.original_grid]
 
     def color_to_symbol(self, color):
         # Convertir colores a símbolos
@@ -219,16 +233,23 @@ class Pixaint:
         return "?"
 
     def toggle_symbols(self):
-        # Función para alternar entre mostrar símbolos y colores en la cuadrícula
-        self.showing_symbols = not self.showing_symbols
-        if self.showing_symbols:
+        # Alterna entre colores, numeros o simbolos
+        if self.showing_numbers:
             for row in range(self.ROWS):
                 for col in range(self.COLS):
-                    self.grid[row][col] = self.color_to_symbol(self.grid[row][col])
+                    self.grid[row][col] = self.number_to_symbol(self.grid[row][col])
+            self.showing_numbers = False
+            self.showing_symbols = True
         else:
-            for row in range(self.ROWS):
-                for col in range(self.COLS):
-                    self.grid[row][col] = self.symbol_to_color(self.grid[row][col])
+            self.showing_symbols = not self.showing_symbols
+            if self.showing_symbols:
+                for row in range(self.ROWS):
+                    for col in range(self.COLS):
+                        self.grid[row][col] = self.color_to_symbol(self.grid[row][col])
+            else:
+                for row in range(self.ROWS):
+                    for col in range(self.COLS):
+                        self.grid[row][col] = self.symbol_to_color(self.grid[row][col])
 
     def clear_grid(self):
         # Limpia la cuadrícula
@@ -256,18 +277,46 @@ class Pixaint:
         return self.WHITE
     
     def rotate_right(self):
-        #Rota la matriz hacia la derecha
+        # Rota la matriz hacia la derecha
         transposed_grid = [[self.grid[col][row] for col in range(self.ROWS)] for row in range(self.COLS)]
         for row in range(self.ROWS):
             transposed_grid[row] = transposed_grid[row][::-1]
         self.grid = transposed_grid
     
     def rotate_left(self):
-        #Rota la matriz a la izquierda
+        # Rota la matriz a la izquierda
         for col in range(self.COLS):
             self.grid[col] = self.grid[col][::-1]
         self.grid = [[self.grid[row][col] for row in range(self.COLS)] for col in range(self.ROWS)]
 
+    def reflect_vert(self):
+        #Refleja el dibujo a partir del eje vertical  
+        for row in range(self.ROWS):
+            for col in range(self.COLS // 2):
+                self.grid[row][col], self.grid[row][self.COLS - 1 - col] = self.grid[row][self.COLS - 1 - col], self.grid[row][col]
+
+    def reflect_horiz(self):
+        #Refleja el dibujo a partir del eje horizontal 
+        for col in range(self.COLS):
+            for row in range(self.ROWS // 2):
+                self.grid[row][col], self.grid[self.ROWS -1 - row][col] = self.grid[self.ROWS - 1 - row][col], self.grid[row][col]
+
+    def symbol_to_number(self, symbol):
+        # Alterna entre simbolo y numero
+        if symbol == "":
+            return 0
+        for idx, sym in enumerate(self.BUTTON_SYMBOLS):
+            if symbol == sym:
+                return idx + 1
+        return -1
+
+    def number_to_symbol(self, number):
+        # Alterna entre numero y simbolo
+        if number == 0:
+            return ""
+        elif 1 <= number <= len(self.BUTTON_SYMBOLS):
+            return self.BUTTON_SYMBOLS[number - 1]
+        return "?"
 
 if __name__ == "__main__":
     game = Pixaint()
