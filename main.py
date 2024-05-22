@@ -2,6 +2,7 @@ import pygame
 import sys
 import os
 from datetime import datetime
+from tkinter import Tk, filedialog
 
 class Pixaint:
     def __init__(self):
@@ -93,7 +94,11 @@ class Pixaint:
             for idx, button in enumerate(self.buttons):
                 if button["rect"].collidepoint(mouse_pos):
                     if idx == 5:
-                        self.save_image()
+                        self.save_grid()
+                        button_clicked = True
+                        break
+                    elif idx == 2:
+                        self.load_grid()
                         button_clicked = True
                         break
                     elif idx == 13:  
@@ -114,21 +119,36 @@ class Pixaint:
                 if 0 <= grid_x < self.COLS and 0 <= grid_y < self.ROWS:
                     self.grid[grid_y][grid_x] = self.selected_color
 
-    def save_image(self):
-        # Función para guardar la imagen
-        surface = pygame.Surface((self.GRID_WIDTH, self.GRID_HEIGHT))
-        for row in range(self.ROWS):
-            for col in range(self.COLS):
-                rect = pygame.Rect(col * self.CELL_SIZE, row * self.CELL_SIZE, self.CELL_SIZE, self.CELL_SIZE)
-                pygame.draw.rect(surface, self.grid[row][col], rect)
-                pygame.draw.rect(surface, self.BORDER_COLOR, rect, 1)
+    def save_grid(self):
+        # Función para guardar la cuadrícula en un archivo de texto
         if not os.path.exists('Pixaint-main/imagenes_guardadas'):
             os.makedirs('Pixaint-main/imagenes_guardadas')
         # Generar el nombre del archivo basado en la fecha y hora actuales
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = os.path.join('Pixaint-main/imagenes_guardadas', f'pixaint_image_{timestamp}.png')
-        pygame.image.save(surface, filename)
-        print(f"Imagen guardada en {filename}")
+        filename = os.path.join('Pixaint-main/imagenes_guardadas', f'pixaint_grid_{timestamp}.txt')
+        with open(filename, 'w') as file:
+            for row in self.grid:
+                file.write(' '.join(str(self.color_to_number(cell)) for cell in row) + '\n')
+        print(f"Cuadrícula guardada en {filename}")
+
+    def load_grid(self):
+    # Función para cargar la cuadrícula desde un archivo de texto usando un diálogo de selección de archivos
+        Tk().withdraw()  # Oculta la ventana principal de Tkinter
+        filepath = filedialog.askopenfilename(
+            initialdir="Pixaint-main/imagenes_guardadas",
+            title="Seleccione el archivo de cuadrícula",
+            filetypes=(("Archivos de texto", "*.txt"), ("Todos los archivos", "*.*"))
+        )
+        if not filepath:
+            print("No se seleccionó ningún archivo.")
+            return
+        with open(filepath, 'r') as file:
+            for row_idx, line in enumerate(file):
+                numbers = line.strip().split(' ')
+                for col_idx, number in enumerate(numbers):
+                    if row_idx < self.ROWS and col_idx < self.COLS:
+                        self.grid[row_idx][col_idx] = self.number_to_color(int(number))  # Convertir número a color
+        print(f"Cuadrícula cargada desde {filepath}")
 
     def draw(self):
         # Función para dibujar la pantalla
