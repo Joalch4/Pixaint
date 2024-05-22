@@ -97,20 +97,20 @@ class Pixaint:
         if not button_clicked:
             for idx, button in enumerate(self.buttons):
                 if button["rect"].collidepoint(mouse_pos):
-                    if idx == 5:
+                    if idx == 6:
                         self.save_grid()
                         button_clicked = True
                         break
-                    elif idx == 2:
+                    elif idx == 7:
                         self.load_grid()
                         button_clicked = True
                         break
-                    elif idx == 3:  # Botón 4 para dibujar círculo
+                    elif idx == 2:  # Botón 4 para dibujar círculo
                         self.drawing_circle = not self.drawing_circle
                         self.circle_center = None
                         button_clicked = True
                         break
-                    elif idx == 13:
+                    elif idx == 15:
                         self.toggle_grid()
                         button_clicked = True
                         break
@@ -118,7 +118,7 @@ class Pixaint:
                         self.toggle_symbols()
                         button_clicked = True
                         break
-                    elif idx == 15:
+                    elif idx == 5:
                         self.clear_grid()
                         button_clicked = True
                         break
@@ -130,11 +130,11 @@ class Pixaint:
                         self.rotate_left()
                         button_clicked = True
                         break
-                    elif idx == 7:
+                    elif idx == 12:
                         self.reflect_vert()
                         button_clicked = True
                         break
-                    elif idx == 11:
+                    elif idx == 13:
                         self.reflect_horiz()
                         button_clicked = True
                         break
