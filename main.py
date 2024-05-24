@@ -26,7 +26,6 @@ class Pixaint:
         self.HEIGHT = self.GRID_HEIGHT + 2 * (self.BUTTON_SIZE + 10)
         self.GRID_X_OFFSET = (self.WIDTH - self.GRID_WIDTH) // 2
         self.GRID_Y_OFFSET = (self.HEIGHT - self.GRID_HEIGHT) // 2
-
         
         # Configuración de la pantalla y título de la ventana
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
@@ -111,7 +110,7 @@ class Pixaint:
                         self.load_grid()
                         button_clicked = True
                         break
-                    elif idx == 2:  # Botón 4 para dibujar círculo
+                    elif idx == 2:
                         self.drawing_circle = not self.drawing_circle
                         self.circle_center = None
                         button_clicked = True
