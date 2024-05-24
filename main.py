@@ -1,4 +1,3 @@
-
 import pygame
 import sys
 import os
@@ -10,8 +9,11 @@ class Pixaint:
         # Inicialización de Pygame y definición de constantes
         pygame.init()
         self.drawing_circle = False
+        self.using_eraser = False
         self.circle_center = None
         self.circle_radius = 0
+        self.showing_white_cells = True
+        self.start_pos = None
         self.CELL_SIZE = 20
         self.ROWS = 20
         self.COLS = 20
@@ -24,6 +26,7 @@ class Pixaint:
         self.HEIGHT = self.GRID_HEIGHT + 2 * (self.BUTTON_SIZE + 10)
         self.GRID_X_OFFSET = (self.WIDTH - self.GRID_WIDTH) // 2
         self.GRID_Y_OFFSET = (self.HEIGHT - self.GRID_HEIGHT) // 2
+
         
         # Configuración de la pantalla y título de la ventana
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
@@ -80,6 +83,8 @@ class Pixaint:
                     running = False
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.handle_mouse_click(event.pos)
+                if event.type == pygame.MOUSEMOTION and pygame.mouse.get_pressed()[0]:
+                    self.eraser()
 
             self.draw()
             
@@ -87,11 +92,12 @@ class Pixaint:
         sys.exit()
 
     def handle_mouse_click(self, mouse_pos):
-        # Manejo de clics del mouse
         button_clicked = False
         for idx, button in enumerate(self.buttons[17:]):
             if button["rect"].collidepoint(mouse_pos):
                 self.selected_color = self.BUTTON_COLORS[idx]
+                if self.using_eraser:
+                    self.using_eraser = False
                 button_clicked = True
                 break
         if not button_clicked:
@@ -110,8 +116,12 @@ class Pixaint:
                         self.circle_center = None
                         button_clicked = True
                         break
+                    elif idx == 14:
+                        self.toggle_white_cells()
+                        button_clicked = True
+                        break
                     elif idx == 15:
-                        self.toggle_grid()
+                        self.toggle_number()
                         button_clicked = True
                         break
                     elif idx == 16:
@@ -130,15 +140,21 @@ class Pixaint:
                         self.rotate_left()
                         button_clicked = True
                         break
-                    elif idx == 12:
+                    elif idx == 13:
                         self.reflect_vert()
                         button_clicked = True
                         break
-                    elif idx == 13:
+                    elif idx == 12:
                         self.reflect_horiz()
                         button_clicked = True
                         break
-            if not button_clicked:
+                    elif idx == 4:
+                        while not (self.showing_numbers or self.showing_symbols):
+                            self.using_eraser = not self.using_eraser
+                            self.eraser()
+                            button_clicked = True
+                            break
+            if not button_clicked and not self.using_eraser:
                 grid_x = (mouse_pos[0] - self.GRID_X_OFFSET) // self.CELL_SIZE
                 grid_y = (mouse_pos[1] - self.GRID_Y_OFFSET) // self.CELL_SIZE
                 if 0 <= grid_x < self.COLS and 0 <= grid_y < self.ROWS:
@@ -153,8 +169,25 @@ class Pixaint:
                             self.drawing_circle = False
                             self.circle_center = None
                             self.circle_radius = 0
-                    else:
-                        self.grid[grid_y][grid_x] = self.selected_color
+                    elif pygame.mouse.get_pressed()[0]:  # Si el botón izquierdo del ratón está presionado
+                        if not self.start_pos:  # Si no se ha establecido la posición de inicio
+                            self.start_pos = (grid_x, grid_y)
+                        else:
+                            # Calcular las coordenadas del cuadrado
+                            start_x, start_y = self.start_pos
+                            end_x, end_y = grid_x, grid_y
+                            # Determinar las esquinas del cuadrado
+                            top_left_x = min(start_x, end_x)
+                            top_left_y = min(start_y, end_y)
+                            bottom_right_x = max(start_x, end_x)
+                            bottom_right_y = max(start_y, end_y)
+                            # Dibujar el cuadrado
+                            for y in range(top_left_y, bottom_right_y + 1):
+                                for x in range(top_left_x, bottom_right_x + 1):
+                                    if 0 <= x < self.COLS and 0 <= y < self.ROWS:
+                                        self.grid[y][x] = self.selected_color
+                            # Reiniciar la posición de inicio
+                            self.start_pos = None
 
     def save_grid(self):
         # Función para guardar la cuadrícula en un archivo de texto
@@ -184,7 +217,7 @@ class Pixaint:
                 numbers = line.strip().split(' ')
                 for col_idx, number in enumerate(numbers):
                     if row_idx < self.ROWS and col_idx < self.COLS:
-                        self.grid[row_idx][col_idx] = self.number_to_color(int(number))  # Convertir número a color
+                        self.grid[row_idx][col_idx] = self.number_to_color(int(number))
         print(f"Cuadrícula cargada desde {filepath}")
 
     def draw(self):
@@ -194,13 +227,15 @@ class Pixaint:
                 self.screen.blit(self.button_images[idx], button["rect"].topleft)
             else:
                 color = self.BUTTON_COLORS[idx - 17]
-                if idx == 3 and self.drawing_circle:  # Botón 4 resaltado cuando está activo
+                if idx == 3 and self.drawing_circle:
                     color = (color[0] // 2, color[1] // 2, color[2] // 2)
                 pygame.draw.rect(self.screen, color, button["rect"], border_radius=5)
         for row in range(self.ROWS):
             for col in range(self.COLS):
                 rect = pygame.Rect(self.GRID_X_OFFSET + col * self.CELL_SIZE, self.GRID_Y_OFFSET + row * self.CELL_SIZE, self.CELL_SIZE, self.CELL_SIZE)
                 color = self.grid[row][col]
+                if color == self.WHITE and not self.showing_white_cells:
+                    continue
                 if self.showing_numbers and isinstance(color, int):
                     text_surface = pygame.font.SysFont(None, 24).render(str(color), True, self.BLACK)
                     self.screen.blit(text_surface, rect.topleft)
@@ -222,7 +257,7 @@ class Pixaint:
                 return idx + 1
         return -1
 
-    def toggle_grid(self):
+    def toggle_number(self):
         # Alterna entre colores, numeros o simbolos
         if self.showing_symbols:
             for row in range(self.ROWS):
@@ -292,7 +327,11 @@ class Pixaint:
         elif 1 <= number <= len(self.BUTTON_COLORS):
             return self.BUTTON_COLORS[number - 1]
         return self.WHITE
-    
+
+    def toggle_white_cells(self):
+        # Alterna entre mostrar y ocultar celdas blancas
+        self.showing_white_cells = not self.showing_white_cells
+
     def rotate_right(self):
         # Rota la matriz hacia la derecha
         transposed_grid = [[self.grid[col][row] for col in range(self.ROWS)] for row in range(self.COLS)]
@@ -346,6 +385,15 @@ class Pixaint:
                 distance = (dx ** 2 + dy ** 2) ** 0.5
                 if distance <= self.circle_radius:
                     self.grid[row][col] = self.selected_color
+
+    def eraser(self):
+        if not self.using_eraser:
+            return
+        mouse_pos = pygame.mouse.get_pos()
+        grid_x = (mouse_pos[0] - self.GRID_X_OFFSET) // self.CELL_SIZE
+        grid_y = (mouse_pos[1] - self.GRID_Y_OFFSET) // self.CELL_SIZE
+        if 0 <= grid_x < self.COLS and 0 <= grid_y < self.ROWS:
+            self.grid[grid_y][grid_x] = self.WHITE
 
 if __name__ == "__main__":
     game = Pixaint()
