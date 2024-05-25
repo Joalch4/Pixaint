@@ -1,9 +1,9 @@
-
 import pygame
 import sys
 import os
 from datetime import datetime
 from tkinter import Tk, filedialog
+
 
 class Pixaint:
     def __init__(self):
@@ -26,7 +26,6 @@ class Pixaint:
         self.GRID_X_OFFSET = (self.WIDTH - self.GRID_WIDTH) // 2
         self.GRID_Y_OFFSET = (self.HEIGHT - self.GRID_HEIGHT) // 2
 
-        
         # Configuración de la pantalla y título de la ventana
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
         pygame.display.set_caption('Pixaint')
@@ -36,16 +35,16 @@ class Pixaint:
         self.BLACK = (0, 0, 0)
         self.BORDER_COLOR = self.BLACK
         self.BUTTON_COLORS = [
-            (255, 0, 0),    # Rojo (Botón 18)
-            (152, 251, 152),# Verde claro (Botón 19)
-            (0, 0, 255),    # Azul (Botón 20)
+            (255, 0, 0),  # Rojo (Botón 18)
+            (152, 251, 152),  # Verde claro (Botón 19)
+            (0, 0, 255),  # Azul (Botón 20)
             (255, 255, 0),  # Amarillo (Botón 21)
-            (255, 192, 203),# Rosado (Botón 22)
+            (255, 192, 203),  # Rosado (Botón 22)
             (0, 255, 255),  # Celeste (Botón 23)
-            (128, 128, 128),# Gris (Botón 24)
+            (128, 128, 128),  # Gris (Botón 24)
             (255, 165, 0),  # Naranja (Botón 25)
             (128, 0, 128),  # Morado (Botón 26)
-            (0, 128, 0),    # Verde oscuro (Botón 27)
+            (0, 128, 0),  # Verde oscuro (Botón 27)
             (255, 0, 255),  # Blanco (Botón 28)
         ]
         self.BUTTON_SYMBOLS = [
@@ -62,17 +61,29 @@ class Pixaint:
         self.buttons = []
         # Creamos los rectángulos para los botones y su texto asociado
         for i in range(self.NUM_BUTTONS // 4):
-            self.buttons.append({"rect": pygame.Rect(self.GRID_X_OFFSET - self.BUTTON_SIZE - 10, self.GRID_Y_OFFSET + i * (self.BUTTON_SIZE + self.BUTTON_PADDING), self.BUTTON_SIZE, self.BUTTON_SIZE), "text": f"Botón {i+1}"})
+            self.buttons.append({"rect": pygame.Rect(self.GRID_X_OFFSET - self.BUTTON_SIZE - 10,
+                                                     self.GRID_Y_OFFSET + i * (self.BUTTON_SIZE + self.BUTTON_PADDING),
+                                                     self.BUTTON_SIZE, self.BUTTON_SIZE), "text": f"Botón {i + 1}"})
         for i in range(self.NUM_BUTTONS // 4):
-            self.buttons.append({"rect": pygame.Rect(self.GRID_X_OFFSET + self.GRID_WIDTH + 10, self.GRID_Y_OFFSET + i * (self.BUTTON_SIZE + self.BUTTON_PADDING), self.BUTTON_SIZE, self.BUTTON_SIZE), "text": f"Botón {i+1+self.NUM_BUTTONS//4}"})
+            self.buttons.append({"rect": pygame.Rect(self.GRID_X_OFFSET + self.GRID_WIDTH + 10,
+                                                     self.GRID_Y_OFFSET + i * (self.BUTTON_SIZE + self.BUTTON_PADDING),
+                                                     self.BUTTON_SIZE, self.BUTTON_SIZE),
+                                 "text": f"Botón {i + 1 + self.NUM_BUTTONS // 4}"})
         for i in range(self.NUM_BUTTONS // 4):
-            self.buttons.append({"rect": pygame.Rect(self.GRID_X_OFFSET + i * (self.BUTTON_SIZE + self.BUTTON_PADDING), self.GRID_Y_OFFSET - self.BUTTON_SIZE - 10, self.BUTTON_SIZE, self.BUTTON_SIZE), "text": f"Botón {i+1+self.NUM_BUTTONS//2}"})
+            self.buttons.append({"rect": pygame.Rect(self.GRID_X_OFFSET + i * (self.BUTTON_SIZE + self.BUTTON_PADDING),
+                                                     self.GRID_Y_OFFSET - self.BUTTON_SIZE - 10, self.BUTTON_SIZE,
+                                                     self.BUTTON_SIZE),
+                                 "text": f"Botón {i + 1 + self.NUM_BUTTONS // 2}"})
         for i in range(self.NUM_BUTTONS // 4):
-            self.buttons.append({"rect": pygame.Rect(self.GRID_X_OFFSET + i * (self.BUTTON_SIZE + self.BUTTON_PADDING), self.GRID_Y_OFFSET + self.GRID_HEIGHT + 10, self.BUTTON_SIZE, self.BUTTON_SIZE), "text": f"Botón {i+1+3*(self.NUM_BUTTONS//4)}"})
+            self.buttons.append({"rect": pygame.Rect(self.GRID_X_OFFSET + i * (self.BUTTON_SIZE + self.BUTTON_PADDING),
+                                                     self.GRID_Y_OFFSET + self.GRID_HEIGHT + 10, self.BUTTON_SIZE,
+                                                     self.BUTTON_SIZE),
+                                 "text": f"Botón {i + 1 + 3 * (self.NUM_BUTTONS // 4)}"})
         self.selected_color = self.WHITE
         self.showing_numbers = False
         self.showing_symbols = False
-
+        self.showing_high_contrast = False
+        self.showing_negative = False
     def run(self):
         # Bucle principal del juego
         running = True
@@ -86,7 +97,7 @@ class Pixaint:
                     self.eraser()
 
             self.draw()
-            
+
         pygame.quit()
         sys.exit()
 
@@ -96,6 +107,7 @@ class Pixaint:
         for idx, button in enumerate(self.buttons[17:]):
             if button["rect"].collidepoint(mouse_pos):
                 self.selected_color = self.BUTTON_COLORS[idx]
+                print(idx)
                 if self.using_eraser:
                     self.using_eraser = False
                 button_clicked = True
@@ -136,20 +148,28 @@ class Pixaint:
                         self.rotate_left()
                         button_clicked = True
                         break
-                    elif idx == 13:
+                    elif idx == 12:
                         self.reflect_vert()
                         button_clicked = True
                         break
-                    elif idx == 12:
+                    elif idx == 13:
                         self.reflect_horiz()
                         button_clicked = True
                         break
                     elif idx == 4:
-                        while not (self.showing_numbers or self.showing_symbols) :
+                        while not (self.showing_numbers or self.showing_symbols or self.showing_high_contrast):
                             self.using_eraser = not self.using_eraser
                             self.eraser()
                             button_clicked = True
                             break
+                    elif idx == 10:
+                        self.toggle_high_contrast()
+                        button_clicked = True
+                        break
+                    elif idx == 11:
+                        self.toggle_negative()
+                        button_clicked = True
+                        break
             if not button_clicked and not self.using_eraser:
                 grid_x = (mouse_pos[0] - self.GRID_X_OFFSET) // self.CELL_SIZE
                 grid_y = (mouse_pos[1] - self.GRID_Y_OFFSET) // self.CELL_SIZE
@@ -181,7 +201,7 @@ class Pixaint:
         print(f"Cuadrícula guardada en {filename}")
 
     def load_grid(self):
-    # Función para cargar la cuadrícula desde un archivo de texto usando un diálogo de selección de archivos
+        # Función para cargar la cuadrícula desde un archivo de texto usando un diálogo de selección de archivos
         Tk().withdraw()  # Oculta la ventana principal de Tkinter
         filepath = filedialog.askopenfilename(
             initialdir="Pixaint-main/imagenes_guardadas",
@@ -211,7 +231,8 @@ class Pixaint:
                 pygame.draw.rect(self.screen, color, button["rect"], border_radius=5)
         for row in range(self.ROWS):
             for col in range(self.COLS):
-                rect = pygame.Rect(self.GRID_X_OFFSET + col * self.CELL_SIZE, self.GRID_Y_OFFSET + row * self.CELL_SIZE, self.CELL_SIZE, self.CELL_SIZE)
+                rect = pygame.Rect(self.GRID_X_OFFSET + col * self.CELL_SIZE, self.GRID_Y_OFFSET + row * self.CELL_SIZE,
+                                   self.CELL_SIZE, self.CELL_SIZE)
                 color = self.grid[row][col]
                 if self.showing_numbers and isinstance(color, int):
                     text_surface = pygame.font.SysFont(None, 24).render(str(color), True, self.BLACK)
@@ -304,14 +325,14 @@ class Pixaint:
         elif 1 <= number <= len(self.BUTTON_COLORS):
             return self.BUTTON_COLORS[number - 1]
         return self.WHITE
-    
+
     def rotate_right(self):
         # Rota la matriz hacia la derecha
         transposed_grid = [[self.grid[col][row] for col in range(self.ROWS)] for row in range(self.COLS)]
         for row in range(self.ROWS):
             transposed_grid[row] = transposed_grid[row][::-1]
         self.grid = transposed_grid
-    
+
     def rotate_left(self):
         # Rota la matriz a la izquierda
         for col in range(self.COLS):
@@ -319,16 +340,18 @@ class Pixaint:
         self.grid = [[self.grid[row][col] for row in range(self.COLS)] for col in range(self.ROWS)]
 
     def reflect_vert(self):
-        #Refleja el dibujo a partir del eje vertical  
+        # Refleja el dibujo a partir del eje vertical
         for row in range(self.ROWS):
             for col in range(self.COLS // 2):
-                self.grid[row][col], self.grid[row][self.COLS - 1 - col] = self.grid[row][self.COLS - 1 - col], self.grid[row][col]
+                self.grid[row][col], self.grid[row][self.COLS - 1 - col] = self.grid[row][self.COLS - 1 - col], \
+                self.grid[row][col]
 
     def reflect_horiz(self):
-        #Refleja el dibujo a partir del eje horizontal 
+        # Refleja el dibujo a partir del eje horizontal
         for col in range(self.COLS):
             for row in range(self.ROWS // 2):
-                self.grid[row][col], self.grid[self.ROWS -1 - row][col] = self.grid[self.ROWS - 1 - row][col], self.grid[row][col]
+                self.grid[row][col], self.grid[self.ROWS - 1 - row][col] = self.grid[self.ROWS - 1 - row][col], \
+                self.grid[row][col]
 
     def symbol_to_number(self, symbol):
         # Alterna entre simbolo y numero
@@ -368,6 +391,55 @@ class Pixaint:
         if 0 <= grid_x < self.COLS and 0 <= grid_y < self.ROWS:
             self.grid[grid_y][grid_x] = self.WHITE
 
+    def high_contrast(self, color):
+        if color == self.WHITE:
+            return self.WHITE
+        elif color in self.BUTTON_COLORS[:5]:
+            return self.BUTTON_COLORS[0]
+        elif color in self.BUTTON_COLORS[5:11]:
+            return self.BUTTON_COLORS[6]
+        else:
+            return color
+
+    def toggle_high_contrast(self):
+        if self.showing_high_contrast:
+            self.grid = [row[:] for row in self.original_grid]
+            self.showing_numbers = False
+            self.showing_symbols = False
+            self.showing_high_contrast = False
+        else:
+            self.original_grid = [row[:] for row in self.grid]
+            for row in range(self.ROWS):
+                for col in range(self.COLS):
+                    self.grid[row][col] = self.high_contrast(self.grid[row][col])
+            self.showing_numbers = False
+            self.showing_symbols = False
+            self.showing_high_contrast = True
+
+    def negative(self, color):
+        if color == self.WHITE:
+            return self.WHITE
+
+        mapping = {self.BUTTON_COLORS[i]: self.BUTTON_COLORS[-(i + 1)] for i in range(len(self.BUTTON_COLORS))}
+
+        return mapping.get(color, color)
+
+    def toggle_negative(self):
+        if self.showing_negative:
+            self.grid = [row[:] for row in self.original_grid]
+            self.showing_numbers = False
+            self.showing_symbols = False
+            self.showing_high_contrast = False
+            self.showing_negative = False
+        else:
+            self.original_grid = [row[:] for row in self.grid]
+            for row in range(self.ROWS):
+                for col in range(self.COLS):
+                    self.grid[row][col] = self.negative(self.grid[row][col])
+            self.showing_numbers = False
+            self.showing_symbols = False
+            self.showing_high_contrast = False
+            self.showing_negative = True
 
 if __name__ == "__main__":
     game = Pixaint()
