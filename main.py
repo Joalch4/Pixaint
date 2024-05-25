@@ -14,6 +14,7 @@ class Pixaint:
         self.circle_center = None
         self.circle_radius = 0
         self.showing_white_cells = True
+        self.drawing_square = False
         self.CELL_SIZE = 20
         self.ROWS = 20
         self.COLS = 20
@@ -103,12 +104,10 @@ class Pixaint:
         sys.exit()
 
     def handle_mouse_click(self, mouse_pos):
-        # Manejo de clics del mouse
         button_clicked = False
         for idx, button in enumerate(self.buttons[17:]):
             if button["rect"].collidepoint(mouse_pos):
                 self.selected_color = self.BUTTON_COLORS[idx]
-                print(idx)
                 if self.using_eraser:
                     self.using_eraser = False
                 button_clicked = True
@@ -124,9 +123,15 @@ class Pixaint:
                         self.load_grid()
                         button_clicked = True
                         break
-                    elif idx == 2:  # Botón 4 para dibujar círculo
+                    elif idx == 2:
                         self.drawing_circle = not self.drawing_circle
                         self.circle_center = None
+                        button_clicked = True
+                        break
+                    elif idx == 3:  # Botón 4 para dibujar cuadrado
+                        self.drawing_square = not self.drawing_square
+                        self.square_start = None
+                        self.square_end = None
                         button_clicked = True
                         break
                     elif idx == 14:
@@ -190,6 +195,15 @@ class Pixaint:
                             self.drawing_circle = False
                             self.circle_center = None
                             self.circle_radius = 0
+                    elif self.drawing_square:
+                        if self.square_start is None:
+                            self.square_start = (grid_x, grid_y)
+                        else:
+                            self.square_end = (grid_x, grid_y)
+                            self.draw_square()
+                            self.drawing_square = False
+                            self.square_start = None
+                            self.square_end = None
                     else:
                         self.grid[grid_y][grid_x] = self.selected_color
 
@@ -450,6 +464,20 @@ class Pixaint:
 
     def toggle_white_cells(self):
         self.showing_white_cells = not self.showing_white_cells
+
+    def draw_square(self):
+        if self.square_start is None or self.square_end is None:
+            return
+        x1, y1 = self.square_start
+        x2, y2 = self.square_end
+        start_col = min(x1, x2)
+        end_col = max(x1, x2)
+        start_row = min(y1, y2)
+        end_row = max(y1, y2)
+
+        for row in range(start_row, end_row + 1):
+            for col in range(start_col, end_col + 1):
+                self.grid[row][col] = self.selected_color
 
 if __name__ == "__main__":
     game = Pixaint()
