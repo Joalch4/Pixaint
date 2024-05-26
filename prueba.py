@@ -10,7 +10,8 @@ class Pixaint:
         # Inicialización de Pygame y definición de constantes
         pygame.init()
         self.zooming_in = False
-        self.zoom_factor = 1.2  # Factor de zoom, ajusta según tus necesidades
+        self.zooming_out = False
+        self.zoom_factor = 2  # Factor de zoom, ajusta según tus necesidades
         self.drawing_circle = False
         self.using_eraser = False
         self.circle_center = None
@@ -29,11 +30,9 @@ class Pixaint:
         self.HEIGHT = self.GRID_HEIGHT + 2 * (self.BUTTON_SIZE + 10)
         self.GRID_X_OFFSET = (self.WIDTH - self.GRID_WIDTH) // 2
         self.GRID_Y_OFFSET = (self.HEIGHT - self.GRID_HEIGHT) // 2
-
         # Configuración de la pantalla y título de la ventana
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
         pygame.display.set_caption('Pixaint')
-
         # Definición de colores y símbolos de los botones
         self.WHITE = (255, 255, 255)
         self.BLACK = (0, 0, 0)
@@ -68,26 +67,30 @@ class Pixaint:
             self.buttons.append({"rect": pygame.Rect(self.GRID_X_OFFSET - self.BUTTON_SIZE - 10,
                                                      self.GRID_Y_OFFSET + i * (self.BUTTON_SIZE + self.BUTTON_PADDING),
                                                      self.BUTTON_SIZE, self.BUTTON_SIZE), "text": f"Botón {i + 1}"})
-        for i in range(self.NUM_BUTTONS // 4):
+        for i in range(self.NUM_BUTTONS // 4, self.NUM_BUTTONS // 2):
             self.buttons.append({"rect": pygame.Rect(self.GRID_X_OFFSET + self.GRID_WIDTH + 10,
-                                                     self.GRID_Y_OFFSET + i * (self.BUTTON_SIZE + self.BUTTON_PADDING),
-                                                     self.BUTTON_SIZE, self.BUTTON_SIZE),
-                                 "text": f"Botón {i + 1 + self.NUM_BUTTONS // 4}"})
-        for i in range(self.NUM_BUTTONS // 4):
-            self.buttons.append({"rect": pygame.Rect(self.GRID_X_OFFSET + i * (self.BUTTON_SIZE + self.BUTTON_PADDING),
+                                                     self.GRID_Y_OFFSET + (i - self.NUM_BUTTONS // 4) * (self.BUTTON_SIZE + self.BUTTON_PADDING),
+                                                     self.BUTTON_SIZE, self.BUTTON_SIZE), "text": f"Botón {i + 1}"})
+        for i in range(self.NUM_BUTTONS // 2, 3 * self.NUM_BUTTONS // 4):
+            self.buttons.append({"rect": pygame.Rect(self.GRID_X_OFFSET + (i - self.NUM_BUTTONS // 2) * (self.BUTTON_SIZE + self.BUTTON_PADDING),
                                                      self.GRID_Y_OFFSET - self.BUTTON_SIZE - 10, self.BUTTON_SIZE,
-                                                     self.BUTTON_SIZE),
-                                 "text": f"Botón {i + 1 + self.NUM_BUTTONS // 2}"})
-        for i in range(self.NUM_BUTTONS // 4):
-            self.buttons.append({"rect": pygame.Rect(self.GRID_X_OFFSET + i * (self.BUTTON_SIZE + self.BUTTON_PADDING),
+                                                     self.BUTTON_SIZE), "text": f"Botón {i + 1}"})
+        for i in range(3 * self.NUM_BUTTONS // 4, self.NUM_BUTTONS):
+            self.buttons.append({"rect": pygame.Rect(self.GRID_X_OFFSET + (i - 3 * self.NUM_BUTTONS // 4) * (self.BUTTON_SIZE + self.BUTTON_PADDING),
                                                      self.GRID_Y_OFFSET + self.GRID_HEIGHT + 10, self.BUTTON_SIZE,
-                                                     self.BUTTON_SIZE),
-                                 "text": f"Botón {i + 1 + 3 * (self.NUM_BUTTONS // 4)}"})
+                                                     self.BUTTON_SIZE), "text": f"Botón {i + 1}"})
         self.selected_color = self.WHITE
+        self.saved_grids = []
+
         self.showing_numbers = False
         self.showing_symbols = False
         self.showing_high_contrast = False
         self.showing_negative = False
+        self.showing_grid = True
+        self.symbols = [[" " for _ in range(self.COLS)] for _ in range(self.ROWS)]
+        self.eraser_active = False
+        self.eraser_size = 1
+
     def run(self):
         # Bucle principal del juego
         running = True
@@ -121,6 +124,10 @@ class Pixaint:
                         self.zooming_in = not self.zooming_in
                         button_clicked = True
                         break
+                    elif idx == 1:  # Botón 1 para activar/desactivar el zoom out
+                        self.zooming_out = not self.zooming_out
+                        button_clicked = True
+                        break
                     elif idx == 6:
                         self.save_grid()
                         button_clicked = True
@@ -129,12 +136,12 @@ class Pixaint:
                         self.load_grid()
                         button_clicked = True
                         break
-                    elif idx == 2:
+                    elif idx == 3:
                         self.drawing_circle = not self.drawing_circle
                         self.circle_center = None
                         button_clicked = True
                         break
-                    elif idx == 3:  # Botón 4 para dibujar cuadrado
+                    elif idx == 4:  # Botón 4 para dibujar cuadrado
                         self.drawing_square = not self.drawing_square
                         self.square_start = None
                         self.square_end = None
@@ -192,6 +199,8 @@ class Pixaint:
             if 0 <= grid_x < self.COLS and 0 <= grid_y < self.ROWS:
                 if self.zooming_in:
                     self.zoom_in(grid_x, grid_y)
+                elif self.zooming_out:
+                    self.zoom_out(grid_x, grid_y)
                 elif self.drawing_circle:
                     if self.circle_center is None:
                         self.circle_center = (grid_x, grid_y)
@@ -490,12 +499,36 @@ class Pixaint:
 
     def zoom_in(self, center_x, center_y):
         new_grid = [[self.WHITE for _ in range(self.COLS)] for _ in range(self.ROWS)]
+        
         for row in range(self.ROWS):
             for col in range(self.COLS):
-                new_col = int((col - center_x) * self.zoom_factor + center_x)
-                new_row = int((row - center_y) * self.zoom_factor + center_y)
+                # Calcula las coordenadas del centro desplazadas
+                new_col = (col - center_x) * self.zoom_factor + center_x
+                new_row = (row - center_y) * self.zoom_factor + center_y
+                
+                # Interpolación
+                src_col = int(col / self.zoom_factor + center_x - center_x / self.zoom_factor)
+                src_row = int(row / self.zoom_factor + center_y - center_y / self.zoom_factor)
+                
+                # Verifica que las coordenadas de origen están dentro de los límites
+                if 0 <= src_row < self.ROWS and 0 <= src_col < self.COLS:
+                    new_grid[row][col] = self.grid[src_row][src_col]
+
+        self.grid = new_grid
+
+    def zoom_out(self, center_x, center_y):
+        new_grid = [[self.WHITE for _ in range(self.COLS)] for _ in range(self.ROWS)]
+
+        for row in range(self.ROWS):
+            for col in range(self.COLS):
+                # Calcula las coordenadas del centro desplazadas
+                new_col = int((col - center_x) / self.zoom_factor + center_x)
+                new_row = int((row - center_y) / self.zoom_factor + center_y)
+
+                # Verifica que las coordenadas de origen están dentro de los límites
                 if 0 <= new_row < self.ROWS and 0 <= new_col < self.COLS:
                     new_grid[new_row][new_col] = self.grid[row][col]
+
         self.grid = new_grid
 
 if __name__ == "__main__":
