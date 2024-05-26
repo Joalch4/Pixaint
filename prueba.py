@@ -9,10 +9,14 @@ class Pixaint:
     def __init__(self):
         # Inicialización de Pygame y definición de constantes
         pygame.init()
+        self.zooming_in = False
+        self.zoom_factor = 1.2  # Factor de zoom, ajusta según tus necesidades
         self.drawing_circle = False
         self.using_eraser = False
         self.circle_center = None
         self.circle_radius = 0
+        self.showing_white_cells = True
+        self.drawing_square = False
         self.CELL_SIZE = 20
         self.ROWS = 20
         self.COLS = 20
@@ -102,12 +106,10 @@ class Pixaint:
         sys.exit()
 
     def handle_mouse_click(self, mouse_pos):
-        # Manejo de clics del mouse
         button_clicked = False
         for idx, button in enumerate(self.buttons[17:]):
             if button["rect"].collidepoint(mouse_pos):
                 self.selected_color = self.BUTTON_COLORS[idx]
-                print(idx)
                 if self.using_eraser:
                     self.using_eraser = False
                 button_clicked = True
@@ -115,7 +117,11 @@ class Pixaint:
         if not button_clicked:
             for idx, button in enumerate(self.buttons):
                 if button["rect"].collidepoint(mouse_pos):
-                    if idx == 6:
+                    if idx == 0:  # Botón 0 para activar/desactivar el zoom in
+                        self.zooming_in = not self.zooming_in
+                        button_clicked = True
+                        break
+                    elif idx == 6:
                         self.save_grid()
                         button_clicked = True
                         break
@@ -123,9 +129,19 @@ class Pixaint:
                         self.load_grid()
                         button_clicked = True
                         break
-                    elif idx == 2:  # Botón 4 para dibujar círculo
+                    elif idx == 2:
                         self.drawing_circle = not self.drawing_circle
                         self.circle_center = None
+                        button_clicked = True
+                        break
+                    elif idx == 3:  # Botón 4 para dibujar cuadrado
+                        self.drawing_square = not self.drawing_square
+                        self.square_start = None
+                        self.square_end = None
+                        button_clicked = True
+                        break
+                    elif idx == 14:
+                        self.toggle_white_cells()
                         button_clicked = True
                         break
                     elif idx == 15:
@@ -148,11 +164,11 @@ class Pixaint:
                         self.rotate_left()
                         button_clicked = True
                         break
-                    elif idx == 12:
+                    elif idx == 13:
                         self.reflect_vert()
                         button_clicked = True
                         break
-                    elif idx == 13:
+                    elif idx == 12:
                         self.reflect_horiz()
                         button_clicked = True
                         break
@@ -170,23 +186,34 @@ class Pixaint:
                         self.toggle_negative()
                         button_clicked = True
                         break
-            if not button_clicked and not self.using_eraser:
-                grid_x = (mouse_pos[0] - self.GRID_X_OFFSET) // self.CELL_SIZE
-                grid_y = (mouse_pos[1] - self.GRID_Y_OFFSET) // self.CELL_SIZE
-                if 0 <= grid_x < self.COLS and 0 <= grid_y < self.ROWS:
-                    if self.drawing_circle:
-                        if self.circle_center is None:
-                            self.circle_center = (grid_x, grid_y)
-                        else:
-                            dx = grid_x - self.circle_center[0]
-                            dy = grid_y - self.circle_center[1]
-                            self.circle_radius = int((dx ** 2 + dy ** 2) ** 0.5)
-                            self.draw_circle()
-                            self.drawing_circle = False
-                            self.circle_center = None
-                            self.circle_radius = 0
+        if not button_clicked and not self.using_eraser:
+            grid_x = (mouse_pos[0] - self.GRID_X_OFFSET) // self.CELL_SIZE
+            grid_y = (mouse_pos[1] - self.GRID_Y_OFFSET) // self.CELL_SIZE
+            if 0 <= grid_x < self.COLS and 0 <= grid_y < self.ROWS:
+                if self.zooming_in:
+                    self.zoom_in(grid_x, grid_y)
+                elif self.drawing_circle:
+                    if self.circle_center is None:
+                        self.circle_center = (grid_x, grid_y)
                     else:
-                        self.grid[grid_y][grid_x] = self.selected_color
+                        dx = grid_x - self.circle_center[0]
+                        dy = grid_y - self.circle_center[1]
+                        self.circle_radius = int((dx ** 2 + dy ** 2) ** 0.5)
+                        self.draw_circle()
+                        self.drawing_circle = False
+                        self.circle_center = None
+                        self.circle_radius = 0
+                elif self.drawing_square:
+                    if self.square_start is None:
+                        self.square_start = (grid_x, grid_y)
+                    else:
+                        self.square_end = (grid_x, grid_y)
+                        self.draw_square()
+                        self.drawing_square = False
+                        self.square_start = None
+                        self.square_end = None
+                else:
+                    self.grid[grid_y][grid_x] = self.selected_color
 
     def save_grid(self):
         # Función para guardar la cuadrícula en un archivo de texto
@@ -231,9 +258,12 @@ class Pixaint:
                 pygame.draw.rect(self.screen, color, button["rect"], border_radius=5)
         for row in range(self.ROWS):
             for col in range(self.COLS):
-                rect = pygame.Rect(self.GRID_X_OFFSET + col * self.CELL_SIZE, self.GRID_Y_OFFSET + row * self.CELL_SIZE,
-                                   self.CELL_SIZE, self.CELL_SIZE)
+                rect = pygame.Rect(self.GRID_X_OFFSET + col * self.CELL_SIZE,
+                                self.GRID_Y_OFFSET + row * self.CELL_SIZE,
+                                self.CELL_SIZE, self.CELL_SIZE)
                 color = self.grid[row][col]
+                if color == self.WHITE and not self.showing_white_cells:
+                    continue  # Si la opción de mostrar celdas blancas está desactivada, se omite el dibujo de la celda
                 if self.showing_numbers and isinstance(color, int):
                     text_surface = pygame.font.SysFont(None, 24).render(str(color), True, self.BLACK)
                     self.screen.blit(text_surface, rect.topleft)
@@ -440,6 +470,33 @@ class Pixaint:
             self.showing_symbols = False
             self.showing_high_contrast = False
             self.showing_negative = True
+
+    def toggle_white_cells(self):
+        self.showing_white_cells = not self.showing_white_cells
+
+    def draw_square(self):
+        if self.square_start is None or self.square_end is None:
+            return
+        x1, y1 = self.square_start
+        x2, y2 = self.square_end
+        start_col = min(x1, x2)
+        end_col = max(x1, x2)
+        start_row = min(y1, y2)
+        end_row = max(y1, y2)
+
+        for row in range(start_row, end_row + 1):
+            for col in range(start_col, end_col + 1):
+                self.grid[row][col] = self.selected_color
+
+    def zoom_in(self, center_x, center_y):
+        new_grid = [[self.WHITE for _ in range(self.COLS)] for _ in range(self.ROWS)]
+        for row in range(self.ROWS):
+            for col in range(self.COLS):
+                new_col = int((col - center_x) * self.zoom_factor + center_x)
+                new_row = int((row - center_y) * self.zoom_factor + center_y)
+                if 0 <= new_row < self.ROWS and 0 <= new_col < self.COLS:
+                    new_grid[new_row][new_col] = self.grid[row][col]
+        self.grid = new_grid
 
 if __name__ == "__main__":
     game = Pixaint()
