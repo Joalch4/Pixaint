@@ -1,2 +1,2 @@
-# Pixaint
-Este proyecto consiste en crear un Pixel Art inspirado en la aplicacion de Paint
+# Version de Python
+3.12.3
